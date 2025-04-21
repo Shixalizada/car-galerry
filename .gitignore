@@ -1,32 +1,133 @@
-# Prerequisites
-*.d
+#include <iostream>
+#include <string>
+using namespace std;
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+class Car {
+private:
+    static int staticID;
+public:
+    int id;
+    string marka;
+    string model;
+    int year;
 
-# Precompiled Headers
-*.gch
-*.pch
+    Car(string marka = "", string model = "", int year = 0) {
+        this->id = ++staticID;
+        this->marka = marka;
+        this->model = model;
+        this->year = year;
+    }
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+    void show() {
+        cout << "ID: " << id << ", Brand: " << marka << ", Model: " << model << ", Year: " << year << endl;
+    }
+};
 
-# Fortran module files
-*.mod
-*.smod
+int Car::staticID = 0;
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+class CarGallery {
+public:
+    string GalleryName;
+    int carCount;
+    Car** cars;
 
-# Executables
-*.exe
-*.out
-*.app
+    CarGallery(string name = "") {
+        GalleryName = name;
+        carCount = 0;
+        cars = nullptr;
+    }
+
+    void addCar(Car car) {
+        Car** newCars = new Car * [carCount + 1];
+        for (int i = 0; i < carCount; i++) {
+            newCars[i] = cars[i];
+        }
+        newCars[carCount] = new Car(car);
+        delete[] cars;
+        cars = newCars;
+        carCount++;
+    }
+
+    void sell(int id) {
+        int index = -1;
+        for (int i = 0; i < carCount; i++) {
+            if (cars[i]->id == id) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) {
+            cout << "Car with ID " << id << " not found." << endl;
+            return;
+        }
+
+        delete cars[index];
+        for (int i = index; i < carCount - 1; i++) {
+            cars[i] = cars[i + 1];
+        }
+        carCount--;
+        Car** newCars = new Car * [carCount];
+        for (int i = 0; i < carCount; i++) {
+            newCars[i] = cars[i];
+        }
+        delete[] cars;
+        cars = newCars;
+
+        cout << "Car with ID " << id << " has been sold." << endl;
+    }
+
+    void searchCarById(int id) {
+        for (int i = 0; i < carCount; i++) {
+            if (cars[i]->id == id) {
+                cout << "Car found:" << endl;
+                cars[i]->show();
+                return;
+            }
+        }
+        cout << "Car with ID " << id << " not found." << endl;
+    }
+
+    void showAllCars() {
+        if (carCount == 0) {
+            cout << "No cars in the gallery." << endl;
+            return;
+        }
+        cout << "--- All Cars in " << GalleryName << " ---" << endl;
+        for (int i = 0; i < carCount; i++) {
+            cars[i]->show();
+        }
+    }
+
+    ~CarGallery() {
+        for (int i = 0; i < carCount; i++) {
+            delete cars[i];
+        }
+        delete[] cars;
+    }
+};
+
+void main() {
+    CarGallery gallery("SuperAuto");
+
+    Car car1("BMW", "X5", 2020);
+    Car car2("Mercedes", "C200", 2019);
+    Car car3("Audi", "A6", 2021);
+
+    gallery.addCar(car1);
+    gallery.addCar(car2);
+    gallery.addCar(car3);
+
+    gallery.showAllCars();
+
+    int searchId;
+    cout << "Enter ID to search for a car: ";
+    cin >> searchId;
+    gallery.searchCarById(searchId);
+
+    int sellId;
+    cout << "Enter ID to sell a car: ";
+    cin >> sellId;
+    gallery.sell(sellId);
+
+    gallery.showAllCars();
+}
